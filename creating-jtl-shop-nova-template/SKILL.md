@@ -1,5 +1,5 @@
 ---
-name: jtl-nova-template
+name: creating-jtl-shop-nova-template
 description: "JTL-Shop 5 NOVA Template-Entwicklung und Child-Template Anpassungen. Erstellt Child-Templates, passt SCSS/CSS-Stile an, modifiziert Smarty-Blöcke, baut parametrische Produktkataloge (DigiKey-Stil). Verwenden bei: (1) JTL-Shop Child-Template erstellen, (2) SCSS/CSS Themes anpassen, (3) Smarty Templates modifizieren, (4) Umschaltbare Produktansichten (Galerie/Liste/Tabelle), (5) Parametrische Filter und Produktvergleich, (6) CSV/Excel Export. Keywords: JTL-Wawi, NOVA, Bootstrap.php, template.xml, Smarty Blöcke, SCSS Variablen, NOVAChild."
 ---
 
