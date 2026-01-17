@@ -70,19 +70,52 @@ description: "Processes X and generates Y. Use when user wants to Z or mentions 
 
 ## Creation Process
 
-### Step 1: Evaluation-Driven Development
+### Step 1: Research Phase (重要!)
+
+**在创建 Skill 之前，必须充分研究目标领域**：
+
+1. **使用 WebSearch 搜索**（WebFetch 常返回 403）：
+   - 官方文档和 API 参考
+   - 论坛讨论和常见问题
+   - 博客文章和经验分享
+   - GitHub/GitLab 仓库和示例
+
+2. **语言策略**：
+   | 领域 | 搜索语言 |
+   |------|----------|
+   | JTL-Shop, JTL-Wawi | **德语** (Deutsch) |
+   | SAP, DATEV | **德语** |
+   | 中国平台 (淘宝, 微信) | **中文** |
+   | 其他技术 | 英语 |
+
+3. **搜索示例**：
+   ```
+   # JTL 相关 - 使用德语
+   "JTL-Shop 5 NOVA Child Template erstellen Anleitung"
+   "JTL-Wawi Plugin Entwicklung Dokumentation"
+
+   # 通用技术 - 使用英语
+   "React hooks best practices 2024"
+   ```
+
+4. **收集内容**：
+   - 官方资源链接 → 放入 SKILL.md 资源表
+   - 代码示例 → 放入 references/
+   - 常见错误 → 放入故障排除表
+
+### Step 2: Evaluation-Driven Development
 1. Run Claude on representative tasks WITHOUT a skill
 2. Document specific failures or missing context
 3. Create 3+ test scenarios that expose these gaps
 4. Only then write the skill to address actual gaps
 
-### Step 2: Design Structure
+### Step 3: Design Structure
 - What goes in SKILL.md (< 500 lines)
 - What goes in references/ (detailed docs)
 - What goes in scripts/ (automation)
 - What goes in assets/ (templates)
 
-### Step 3: Write SKILL.md Body
+### Step 4: Write SKILL.md Body
 
 **Recommended Structure**:
 ```markdown
@@ -101,7 +134,7 @@ description: "Processes X and generates Y. Use when user wants to Z or mentions 
 - For X details: [references/x.md](references/x.md)
 ```
 
-### Step 4: Iterate with Claude
+### Step 5: Iterate with Claude
 1. Test skill with Claude B (fresh instance)
 2. Observe where it struggles
 3. Refine with Claude A (your helper)
