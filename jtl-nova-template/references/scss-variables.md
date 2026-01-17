@@ -1,12 +1,37 @@
 # SCSS Variables Reference
 
+## Theme-Struktur
+
+```
+templates/MeinTheme/
+└── themes/
+    └── my-nova/                    # Theme-Ordner
+        ├── custom.css              # Fertig kompiliertes CSS (optional)
+        └── sass/
+            ├── _variables.scss     # Variable Überschreibungen
+            └── my-nova.scss        # Haupt-SCSS Datei
+            └── my-nova_crit.scss   # Critical CSS (above-fold)
+```
+
+## Import-Reihenfolge (WICHTIG!)
+
+```scss
+// my-nova.scss
+@import "~bootstrap/scss/functions";
+@import "variables";                                    // 1. ZUERST eigene Variablen
+@import "~templates/NOVA/themes/base/sass/allstyles";  // 2. DANN NOVA-Stile laden
+// 3. Eigene Stile UNTEN hinzufügen
+```
+
+**Falsche Reihenfolge** = Variablen werden ignoriert!
+
 ## File Locations
 
 | File | Purpose |
 |------|---------|
 | `NOVA/themes/base/sass/_variables.scss` | NOVA defaults |
 | `bootstrap/scss/_variables.scss` | Bootstrap defaults |
-| `MyTheme/themes/mytheme/sass/_variables.scss` | Your overrides |
+| `MeinTheme/themes/my-nova/sass/_variables.scss` | Your overrides |
 
 ## Colors
 
@@ -202,10 +227,10 @@ $footer-color: $gray-300;
 
 ```scss
 // _variables.scss
-$primary: #e63946;
+$primary: #e63946;           // Primärfarbe ändern - wirkt auf viele Elemente
 $secondary: #457b9d;
 $font-family-base: 'Open Sans', sans-serif;
-$border-radius: 0;
+$border-radius: 0;           // Eckige Buttons/Inputs
 $btn-border-radius: 0;
 $input-border-radius: 0;
 
@@ -213,3 +238,16 @@ $input-border-radius: 0;
 $header-height: 80px;
 $sidebar-width: 280px;
 ```
+
+## Theme kompilieren
+
+1. **JTL Theme-Editor aktivieren**: Backend → Plugins → JTL Theme-Editor
+2. **Theme-Editor öffnen**: Plugin → Einstellungen
+3. **Theme auswählen**: Dropdown oben links
+4. **Datei bearbeiten**: _variables.scss oder Haupt-SCSS
+5. **Speichern**: "Datei speichern"
+6. **Kompilieren**: "Theme kompilieren" (oben rechts)
+
+**Nach Änderungen immer**:
+- Template-Cache leeren (Backend → Einstellungen → Template Cache)
+- Browser-Cache leeren (Strg+F5)

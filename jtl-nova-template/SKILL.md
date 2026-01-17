@@ -1,27 +1,40 @@
 ---
 name: jtl-nova-template
-description: "JTL-Shop 5 NOVA Template-Entwicklung und Child-Template Anpassungen. Erstellt Child-Templates, passt SCSS/CSS-Stile an, modifiziert Smarty-Blöcke, baut parametrische Produktkataloge (DigiKey-Stil). Verwenden bei: (1) JTL-Shop Child-Template erstellen, (2) SCSS/CSS Themes anpassen, (3) Smarty Templates modifizieren, (4) Umschaltbare Produktansichten (Galerie/Liste/Tabelle), (5) Parametrische Filter und Produktvergleich, (6) CSV/Excel Export. Keywords: JTL-Wawi, NOVA, Bootstrap.php, template.xml, Smarty Blöcke, SCSS Variablen."
+description: "JTL-Shop 5 NOVA Template-Entwicklung und Child-Template Anpassungen. Erstellt Child-Templates, passt SCSS/CSS-Stile an, modifiziert Smarty-Blöcke, baut parametrische Produktkataloge (DigiKey-Stil). Verwenden bei: (1) JTL-Shop Child-Template erstellen, (2) SCSS/CSS Themes anpassen, (3) Smarty Templates modifizieren, (4) Umschaltbare Produktansichten (Galerie/Liste/Tabelle), (5) Parametrische Filter und Produktvergleich, (6) CSV/Excel Export. Keywords: JTL-Wawi, NOVA, Bootstrap.php, template.xml, Smarty Blöcke, SCSS Variablen, NOVAChild."
 ---
 
 # JTL-Shop 5 NOVA Template-Entwicklung
 
-## Quick Reference
+## Quick Start
 
-| Aufgabe | Lösung |
-|---------|--------|
-| Farben/Schriften ändern | `_variables.scss` überschreiben |
-| Layout anpassen | Smarty-Block-Vererbung in `.tpl` |
-| Parametrischer Katalog | Templates aus `assets/templates/` kopieren |
-| Ansicht wechseln | JavaScript + Session Storage |
+```bash
+# 1. NOVAChild-Vorlage herunterladen
+wget https://build.jtl-shop.de/get/template/NOVAChild-master.zip
+
+# 2. Entpacken in templates/
+unzip NOVAChild-master.zip -d /shop/templates/
+
+# 3. Im Backend aktivieren: Darstellung → Templates → NOVAChild
+```
 
 ## Offizielle Ressourcen
 
 | Ressource | Link |
 |-----------|------|
-| Child-Template Download | https://build.jtl-shop.de/get/template/NOVAChild-master.zip |
-| Entwickler-Dokumentation | https://jtl-shop-mkdocs.readthedocs.io/de/latest/shop_templates/ |
-| GitLab Repository | https://gitlab.com/jtl-software/jtl-shop/child-templates/novachild |
-| SCC Komponenten | https://gitlab.com/jtl-software/jtl-shop/tools/scc |
+| NOVAChild Download | https://build.jtl-shop.de/get/template/NOVAChild-master.zip |
+| GitLab NOVAChild | https://gitlab.com/jtl-software/jtl-shop/child-templates/novachild |
+| Entwickler-Docs | https://jtl-devguide.readthedocs.io/projects/jtl-shop/de/latest/shop_templates/ |
+| JTL-Guide | https://guide.jtl-software.com/jtl-shop/darstellung/nova-template/ |
+| JTL-Forum | https://forum.jtl-software.de/ |
+
+## Quick Reference
+
+| Aufgabe | Lösung |
+|---------|--------|
+| Farben/Schriften ändern | `themes/my-nova/sass/_variables.scss` |
+| Layout anpassen | Smarty-Block `{extends}` + `{block}` |
+| JavaScript hinzufügen | `footer.tpl` Block mit `async` Attribut |
+| Parametrischer Katalog | Templates aus `assets/templates/` kopieren |
 
 ## Child-Template Struktur
 
@@ -70,14 +83,16 @@ class Bootstrap extends \Template\NOVA\Bootstrap
 ### SCSS-Struktur
 
 ```scss
-// meintheme.scss
+// meintheme.scss - WICHTIG: Reihenfolge beachten!
 @import "~bootstrap/scss/functions";
-@import "variables";  // Eigene Überschreibungen
-@import "~templates/NOVA/themes/base/sass/allstyles";
-// Eigene Stile unten
+@import "variables";  // ZUERST eigene Variablen überschreiben
+@import "~templates/NOVA/themes/base/sass/allstyles";  // DANN NOVA laden
+// Eigene Stile UNTEN hinzufügen
 ```
 
-Kompilieren: Backend → Plugins → Template-Editor → Theme auswählen → Kompilieren
+**Kompilieren**: Backend → Plugins → JTL Theme-Editor → Theme auswählen → "Theme kompilieren"
+
+**Wichtig**: Nach Änderungen immer Template-Cache leeren (Backend → Einstellungen → Template Cache)
 
 ## Smarty-Block-Vererbung
 
@@ -155,11 +170,35 @@ switchView(view) {
 | `assets/themes/_parametric-catalog.scss` | Katalog-Stile |
 | `assets/Bootstrap.php` | PHP mit IO-Handler und Export |
 
+## JavaScript einbinden
+
+Scripts in `footer.tpl` laden mit `async` Attribut:
+
+```smarty
+{extends file="{$parent_template_path}/layout/footer.tpl"}
+
+{block name='layout-footer-js' append}
+    <script src="{$ShopURL}/templates/MeinTheme/js/custom.js" async></script>
+{/block}
+```
+
+## Plugin-basierte Block-Überschreibung
+
+Templates können auch per Plugin überschrieben werden:
+
+```
+<pluginverzeichnis>/frontend/templates/productdetails/variation.tpl
+```
+
+Der Block wird im Plugin-Template erweitert (gleiche Struktur wie Child-Template).
+
 ## Häufige Probleme
 
 | Problem | Lösung |
 |---------|--------|
-| Template nicht sichtbar | `<Name>` in template.xml muss Ordnernamen entsprechen |
-| Namespace-Fehler | Namespace in Bootstrap.php = `Template\<Ordnername>` |
-| SCSS kompiliert nicht | Cache leeren, Theme-Editor neu laden |
-| Smarty-Block wird ignoriert | Pfad in `{extends}` prüfen |
+| Template nicht sichtbar | `<Name>` in template.xml = Ordnername |
+| Namespace-Fehler | `Template\<Ordnername>` in Bootstrap.php |
+| SCSS kompiliert nicht | Cache leeren + Theme-Editor neu laden |
+| Smarty-Block ignoriert | `{extends}` Pfad prüfen, `{$parent_template_path}` verwenden |
+| Variablen wirken nicht | Import-Reihenfolge: variables VOR allstyles |
+| Änderungen nicht sichtbar | Template-Cache im Backend leeren |

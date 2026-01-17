@@ -150,3 +150,38 @@
 </script>
 {/inline_script}
 ```
+
+### JavaScript in footer (empfohlen)
+```smarty
+{extends file="{$parent_template_path}/layout/footer.tpl"}
+
+{block name='layout-footer-js' append}
+    <script src="{$ShopURL}/templates/{$template->getName()}/js/custom.js" async></script>
+{/block}
+```
+
+## Plugin-basierte Block-Überschreibung
+
+Blöcke können auch über Plugins überschrieben werden (ohne Child-Template):
+
+```
+<plugin-verzeichnis>/
+└── frontend/
+    └── templates/
+        └── productdetails/
+            └── variation.tpl
+```
+
+**variation.tpl**:
+```smarty
+{block name="product-variations" append}
+    {* Plugin-spezifische Erweiterung *}
+{/block}
+```
+
+**Vorteile**:
+- Änderungen bleiben bei Template-Updates erhalten
+- Mehrere Plugins können denselben Block erweitern
+- Keine Konflikte mit Child-Templates
+
+**Hinweis**: Plugin-Erweiterungen werden nach Child-Template-Erweiterungen geladen.
