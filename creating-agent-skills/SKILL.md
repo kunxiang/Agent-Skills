@@ -1,9 +1,11 @@
 ---
-name: skill-creator
-description: "Create well-structured Claude Agent Skills following official specifications. Use when: (1) Creating a new skill from scratch, (2) Converting existing documentation/workflows into skills, (3) Refactoring or improving existing skills, (4) Learning skill development best practices. This skill guides you through the complete skill creation process including structure, frontmatter, progressive disclosure, and quality validation."
+name: creating-agent-skills
+description: "**Meta-skill** for creating Claude Agent Skills. This is the foundational skill that produces other skills - use it to: (1) Create new skills from scratch, (2) Convert documentation/workflows into skills, (3) Refactor existing skills, (4) Learn skill development best practices. Guides through structure, frontmatter, progressive disclosure, and quality validation."
 ---
 
-# Claude Agent Skill Creator
+# Creating Agent Skills (Meta-Skill)
+
+> **This is a meta-skill**: Unlike regular skills that perform specific tasks, this skill creates other skills. It serves as the foundational blueprint for all skill development in this repository.
 
 ## Quick Reference
 

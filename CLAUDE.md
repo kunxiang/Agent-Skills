@@ -17,7 +17,7 @@ Agent-Skills/
 ├── best-practices.md                   # Official Anthropic skill authoring guide
 ├── .gitignore                          # Excludes *.zip files
 │
-├── skill-creator/                      # Meta-skill for creating new skills
+├── creating-agent-skills/              # ⭐ META-SKILL: Creates other skills
 │   ├── SKILL.md                        # Main skill definition
 │   ├── references/                     # Detailed documentation
 │   │   ├── specification.md
@@ -60,9 +60,11 @@ Agent-Skills/
 
 | Skill | Invocation | Purpose |
 |-------|------------|---------|
-| `skill-creator` | `/skill-creator` | Create new Claude Agent Skills following specifications |
+| `creating-agent-skills` ⭐ | `/creating-agent-skills` | **Meta-skill**: Creates other Claude Agent Skills |
 | `creating-jtl-shop-5-plugins` | `/creating-jtl-shop-5-plugins` | JTL-Shop 5 plugin development |
 | `creating-jtl-shop-nova-template` | `/creating-jtl-shop-nova-template` | JTL-Shop 5 NOVA child template development |
+
+> ⭐ **Meta-skill**: `creating-agent-skills` is a special "skill that creates skills". It defines how to create specification-compliant new skills and serves as the foundation for all skill development in this repository.
 
 ## Skill File Structure Convention
 
@@ -104,7 +106,7 @@ description: "Processes X and generates Y. Use when user wants to Z or mentions 
 
 ### Creating a New Skill
 
-1. Use the `skill-creator` skill: `/skill-creator`
+1. Use the meta-skill `creating-agent-skills`: `/creating-agent-skills`
 2. Follow the skill structure conventions
 3. Keep SKILL.md under 500 lines
 4. Use progressive disclosure (reference files for details)
@@ -186,6 +188,6 @@ For JTL-Shop related skills:
 ## References
 
 - **Anthropic Best Practices**: See `best-practices.md` in repository root
-- **Skill Specification**: See `skill-creator/references/specification.md`
-- **Design Patterns**: See `skill-creator/references/design-patterns.md`
-- **Common Mistakes**: See `skill-creator/references/common-mistakes.md`
+- **Skill Specification**: See `creating-agent-skills/references/specification.md`
+- **Design Patterns**: See `creating-agent-skills/references/design-patterns.md`
+- **Common Mistakes**: See `creating-agent-skills/references/common-mistakes.md`
