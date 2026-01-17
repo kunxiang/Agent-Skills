@@ -1,13 +1,52 @@
 # Claude Agent Skills Complete Specification
 
-## Overview
+## What Skills Actually Are
 
-Agent Skills are modular, self-contained packages that extend Claude's capabilities. They consist of:
+Skills are **prompt-based conversation and execution context modifiers** that work through a meta-tool architecture. They are NOT executable code.
 
-1. **Specialized workflows** - Multi-step procedures for specific domains
-2. **Tool integrations** - Instructions for working with specific file formats or APIs
-3. **Domain expertise** - Company-specific knowledge, schemas, business logic
-4. **Bundled resources** - Scripts, references, and assets for complex tasks
+**Key insight**: Skills = Prompt Template + Conversation Context Injection + Execution Context Modification + Optional bundled files
+
+When a skill is invoked:
+1. **Conversation context modified**: Instructions injected as user messages (with `isMeta: true` to hide from UI)
+2. **Execution context modified**: Tool permissions changed, model may be overridden
+3. **Selection via LLM reasoning**: Claude reads descriptions to match user intent (no algorithmic matching)
+
+## Internal Architecture
+
+### The Skill Meta-Tool
+
+The `Skill` tool (capital S) is a meta-tool that manages all individual skills. It appears in Claude's `tools` array alongside Read, Write, Bash, etc.
+
+```
+Traditional Tools vs Skills:
+┌─────────────────────────────────────────────────────────┐
+│ Aspect          │ Traditional Tools │ Skills            │
+├─────────────────────────────────────────────────────────┤
+│ Execution       │ Synchronous       │ Prompt expansion  │
+│ Purpose         │ Perform actions   │ Guide workflows   │
+│ Return          │ Immediate results │ Context changes   │
+│ Token overhead  │ Minimal (~100)    │ Significant (1500+)│
+└─────────────────────────────────────────────────────────┘
+```
+
+### Message Injection
+
+When a skill executes, TWO user messages are injected:
+
+1. **Metadata message** (`isMeta: false` - visible to user):
+```xml
+<command-message>The "pdf" skill is loading</command-message>
+<command-name>pdf</command-name>
+```
+
+2. **Skill prompt message** (`isMeta: true` - hidden from UI):
+```markdown
+You are a PDF processing specialist...
+[Full SKILL.md content]
+Base directory: /path/to/skill
+```
+
+This dual-message design solves transparency vs. clarity: users see what's happening without being overwhelmed by implementation details.
 
 ## Storage Locations
 
@@ -24,16 +63,21 @@ Agent Skills are modular, self-contained packages that extend Claude's capabilit
 ```
 skill-name/
 ├── SKILL.md              # Required - Core instructions
-├── references/           # Optional - Documentation
-│   ├── api-docs.md       # Loaded into context when needed
-│   └── examples.md       # Reference material
-├── scripts/              # Optional - Executable code
-│   ├── helper.py         # Run directly, not loaded into context
-│   └── validate.sh       # Automation scripts
-└── assets/               # Optional - Output resources
-    ├── template.md       # Copied to output, not loaded
-    └── boilerplate/      # Starter files
+├── references/           # Text loaded into context (costs tokens)
+│   ├── api-docs.md       # Claude reads via Read tool
+│   └── examples.md
+├── scripts/              # Executed, NOT loaded (efficient)
+│   ├── helper.py         # Run directly via Bash
+│   └── validate.sh
+└── assets/               # Referenced by path only (no token cost)
+    ├── template.md       # Copied to output
+    └── boilerplate/
 ```
+
+**Critical distinction**:
+- `references/`: Text content → loaded into context → consumes tokens
+- `scripts/`: Executable code → run directly → no context tokens
+- `assets/`: Static files → path reference only → no context tokens
 
 ## SKILL.md Anatomy
 
@@ -51,6 +95,7 @@ model: claude-sonnet-4-20250514  # Model override
 context: fork                 # Isolated execution
 agent: Explore                # Agent type when forked
 user-invocable: true          # Show in slash menu (default: true)
+disable-model-invocation: false  # Prevent auto-invocation
 hooks:                        # Lifecycle hooks
   PreToolUse:
     - matcher: "Bash"
@@ -62,11 +107,12 @@ hooks:                        # Lifecycle hooks
 
 ### Body (Markdown)
 
-The body contains instructions Claude follows when the skill is active. Structure recommendations:
+The body contains instructions Claude follows when the skill is active.
 
-1. **Quick Reference** - Essential lookup tables
-2. **Core Instructions** - Step-by-step guidance
-3. **Examples** - Concrete, minimal examples
+**Recommended structure**:
+1. **Quick Start** - Minimal working example
+2. **Core Instructions** - Step-by-step guidance (imperative form)
+3. **Examples** - Concrete input/output pairs
 4. **References** - Links to detailed documentation
 
 ## Frontmatter Field Details
@@ -74,18 +120,35 @@ The body contains instructions Claude follows when the skill is active. Structur
 ### name (required)
 - Format: lowercase, alphanumeric, hyphens only
 - Max length: 64 characters
+- Cannot contain: XML tags, "anthropic", "claude"
 - Should match directory name
-- Examples: `pdf-processor`, `code-review`, `data-analysis`
+
+**Naming conventions**:
+- Recommended: Gerund form (`processing-pdfs`, `analyzing-data`)
+- Acceptable: Noun phrases (`pdf-processing`) or actions (`process-pdfs`)
+- Avoid: Vague names (`helper`, `utils`, `tools`)
 
 ### description (required)
 - Max length: 1024 characters
-- PRIMARY triggering mechanism - Claude uses this to decide activation
-- Include:
-  - What the skill does
-  - When to use it (trigger conditions)
-  - Keywords users would naturally say
-- Bad: "A tool for PDFs"
-- Good: "Extract text, fill forms, merge PDFs. Use when working with PDF files, forms, or document extraction."
+- **PRIMARY triggering mechanism** - Claude uses this to decide activation
+- **Must be third person**: "Processes files" not "I process files"
+
+**Must include**:
+- What the skill does
+- When to use it (trigger conditions)
+- Keywords users would naturally say
+
+**Good example**:
+```yaml
+description: "Extract text and tables from PDF files, fill forms, merge documents. Use when working with PDF files or when the user mentions PDFs, forms, or document extraction."
+```
+
+**Bad examples**:
+```yaml
+description: "Helps with documents"  # Too vague
+description: "I can process PDFs"    # Wrong person
+description: "You can use this for PDFs"  # Wrong person
+```
 
 ### allowed-tools (optional)
 Restricts which tools Claude can use when skill is active.
@@ -98,15 +161,14 @@ allowed-tools: Read, Grep, Glob
 allowed-tools:
   - Read
   - Grep
-  - Glob
   - Bash(python:*)
-
-# Tool patterns
-allowed-tools: Bash(npm:*)    # Only npm commands
-allowed-tools: Bash(python:*) # Only python commands
+  - Bash(git status:*)
 ```
 
-When omitted, no restrictions apply.
+**Tool pattern syntax**:
+- `Bash(python:*)` - Only python commands
+- `Bash(npm run build:*)` - Specific npm scripts
+- `Bash(git:*)` - All git commands
 
 ### model (optional)
 Override the model used when skill is active.
@@ -121,21 +183,17 @@ Set to `fork` to run in isolated sub-agent context.
 
 ```yaml
 context: fork
-agent: Explore  # Agent type: Explore, Plan, general-purpose, or custom
+agent: Explore  # Agent type: Explore, Plan, general-purpose
 ```
 
-Benefits:
-- Separate conversation history
-- Doesn't clutter main conversation
-- Good for complex multi-step operations
+### disable-model-invocation (optional)
+When `true`, prevents Claude from automatically invoking the skill. Can only be invoked manually via `/skill-name`.
 
-### user-invocable (optional)
-Controls visibility in slash command menu.
+```yaml
+disable-model-invocation: true
+```
 
-| Setting | Slash Menu | Auto-discovery | Use Case |
-|---------|-----------|----------------|----------|
-| `true` (default) | Visible | Yes | User-invoked skills |
-| `false` | Hidden | Yes | Model-invoked only |
+Use for: dangerous operations, configuration commands, interactive workflows requiring explicit user control.
 
 ### hooks (optional)
 Define lifecycle hooks scoped to skill execution.
@@ -152,7 +210,7 @@ hooks:
     - matcher: "Write"
       hooks:
         - type: command
-          command: "./scripts/format.sh $OUTPUT_FILE"
+          command: "./scripts/format.sh"
   Stop:
     - type: command
       command: "./scripts/cleanup.sh"
@@ -160,108 +218,61 @@ hooks:
 
 ## String Substitutions
 
-Available variables in skill content:
-
 | Variable | Description |
 |----------|-------------|
 | `$ARGUMENTS` | Arguments passed when invoking the skill |
 | `${CLAUDE_SESSION_ID}` | Current session ID |
-
-Example:
-```markdown
-Log activity to: logs/${CLAUDE_SESSION_ID}.log
-Process these files: $ARGUMENTS
-```
+| `{baseDir}` | Skill's installation directory |
 
 ## Progressive Disclosure Architecture
 
 Three-level loading system:
 
-### Level 1: Metadata (Always Loaded)
+### Level 1: Metadata (Always Loaded at Startup)
 - Name and description only (~100 tokens)
-- Loaded at startup for all installed skills
 - Used for skill matching/triggering
+- Token budget limit: 15,000 characters by default
 
 ### Level 2: SKILL.md Body (On Activation)
-- Full instructions (<5000 words / <500 lines)
-- Loaded when user request matches skill description
+- Full instructions (< 500 lines / ~5000 words)
 - User sees confirmation prompt before loading
 
 ### Level 3: Bundled Resources (On Demand)
-- References, scripts, assets (unlimited size)
-- Loaded only when Claude needs them
-- Scripts may execute without loading content
+- References loaded when Claude needs them
+- Scripts executed without loading content
+- Assets referenced by path
 
-## Resource Types
+## Execution Lifecycle
 
-### references/
-- **Purpose**: Documentation loaded into context
-- **When loaded**: When Claude needs the information
-- **Examples**: API docs, schemas, policies, detailed guides
-- **Best practice**: Keep SKILL.md lean; detailed info goes here
-
-### scripts/
-- **Purpose**: Executable code
-- **When loaded**: Never - executed directly
-- **Token efficiency**: High (runs without context consumption)
-- **Examples**: Validation scripts, automation helpers, data processors
-
-### assets/
-- **Purpose**: Files for output, not context
-- **When loaded**: Never - copied to output
-- **Examples**: Templates, boilerplate, images, icons
-
-## Skill Lifecycle
-
-### Discovery (Startup)
-1. Claude scans skill locations
-2. Loads only names and descriptions
-3. Creates mental index for matching
-
-### Activation (On Request)
-1. User makes request
-2. Claude matches request to skill descriptions
-3. User confirms skill activation
-4. Full SKILL.md loads into context
-
-### Execution (During Task)
-1. Claude follows skill instructions
-2. Loads references as needed
-3. Executes scripts as needed
-4. Copies assets as needed
-
-### Completion
-1. Hooks cleanup (if defined)
-2. Skill deactivates
-3. Context returns to normal
-
-## Distribution Methods
-
-### Project Skills
+### Phase 1: Discovery (Startup)
 ```
-my-repo/
-└── .claude/skills/
-    └── my-skill/
-        └── SKILL.md
+Claude Code scans:
+├── ~/.claude/skills/          # Personal
+├── .claude/skills/            # Project
+├── Plugin skills directories  # Plugins
+└── Built-in skills           # System
 ```
-Commit to version control; team gets skills with repo.
 
-### Personal Skills
-```
-~/.claude/skills/
-└── my-skill/
-    └── SKILL.md
-```
-Available across all your projects.
+### Phase 2: Turn 1 - User Request & Skill Selection
+1. User sends request
+2. Claude receives message + tools array (including Skill meta-tool)
+3. Claude reads `<available_skills>` in Skill tool description
+4. Claude reasons about which skill matches (pure LLM reasoning, no algorithmic matching)
+5. Claude returns tool_use with `name: "Skill"` and `input: { command: "skill-name" }`
 
-### Plugin Skills
-```
-my-plugin/
-└── skills/
-    └── my-skill/
-        └── SKILL.md
-```
-Distributed via plugin marketplace.
+### Phase 3: Skill Tool Execution
+1. **Validation**: Check skill exists, is enabled, type is "prompt"
+2. **Permission check**: Check allow/deny rules, ask user if needed
+3. **Load skill file**: Parse SKILL.md, extract frontmatter and body
+4. **Generate messages**: Metadata message + skill prompt message
+5. **Apply context modifier**: Set tool permissions, override model if specified
+6. **Yield result**: Return messages and context modifier
+
+### Phase 4: Subsequent Turns
+- Claude follows skill instructions with modified context
+- Pre-approved tools work without user prompts
+- References loaded as needed via Read tool
+- Scripts executed as needed via Bash tool
 
 ## Security Considerations
 
@@ -270,3 +281,14 @@ Distributed via plugin marketplace.
 3. **Limit tools**: Use `allowed-tools` to restrict capabilities
 4. **Version control**: Track skill changes in git
 5. **No secrets**: Never store credentials in skills
+
+## MCP Tool References
+
+If your skill uses MCP tools, use fully qualified names:
+
+```markdown
+Use the BigQuery:bigquery_schema tool to retrieve schemas.
+Use the GitHub:create_issue tool to create issues.
+```
+
+Format: `ServerName:tool_name`
