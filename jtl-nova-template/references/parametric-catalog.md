@@ -1,42 +1,42 @@
-# Parametric Product Catalog Implementation
+# Parametric Product Catalog - Smarty Templates
 
-## Overview
+## Übersicht
 
-DigiKey-style catalog with three switchable views and user preference persistence.
+DigiKey-Stil Katalog mit drei umschaltbaren Ansichten und Benutzereinstellungs-Persistenz.
 
-## File Structure
+## Dateistruktur
 
 ```
-templates/MyTheme/
-├── Bootstrap.php                    # IO handlers + export
+templates/MeinTheme/
+├── Bootstrap.php                    # IO-Handler + Export
 ├── productlist/
-│   ├── index.tpl                   # Main (copy from assets)
-│   ├── filter_parametric.tpl       # Filters
-│   ├── product_table.tpl           # Table view
-│   └── item_list.tpl               # List view item
+│   ├── index.tpl                   # Haupt-Template
+│   ├── filter_parametric.tpl       # Filter
+│   ├── product_table.tpl           # Tabellenansicht
+│   └── item_list.tpl               # Listenansicht-Item
 ├── js/
-│   └── parametric-catalog.js       # JS class
-└── themes/mytheme/sass/
-    └── _parametric-catalog.scss    # Styles
+│   └── parametric-catalog.js       # JS-Klasse
+└── themes/meintheme/sass/
+    └── _parametric-catalog.scss    # Stile
 ```
 
-## Main Template (index.tpl)
+## Haupt-Template (index.tpl)
 
 ```smarty
 {extends file="{$parent_template_path}/productlist/index.tpl"}
 
 {block name="productlist"}
 <div class="parametric-catalog" data-view="{$smarty.session.catalogView|default:'gallery'}">
-    
+
     {* Header *}
     <div class="catalog-header">
         <h1>{$Kategorie->cName}</h1>
         <span class="result-count"><strong>{$Suchergebnisse->Artikel->nAnzahl}</strong> Produkte</span>
     </div>
-    
-    {* Filters *}
+
+    {* Filter *}
     {include file="productlist/filter_parametric.tpl"}
-    
+
     {* Toolbar *}
     <div class="catalog-toolbar">
         <div class="view-switcher btn-group">
@@ -54,8 +54,8 @@ templates/MyTheme/
             <option value="4">Preis absteigend</option>
         </select>
     </div>
-    
-    {* Views *}
+
+    {* Ansichten *}
     <div class="catalog-content">
         <div class="view-gallery catalog-view">
             <div class="row">
@@ -66,18 +66,18 @@ templates/MyTheme/
                 {/foreach}
             </div>
         </div>
-        
+
         <div class="view-list catalog-view" style="display:none">
             {foreach $Suchergebnisse->Artikel->elemente as $Artikel}
                 {include file='productlist/item_list.tpl'}
             {/foreach}
         </div>
-        
+
         <div class="view-table catalog-view" style="display:none">
             {include file='productlist/product_table.tpl'}
         </div>
     </div>
-    
+
     {include file='snippets/pagination.tpl' oPagination=$Suchergebnisse->Seitenzahlen}
 </div>
 
@@ -85,20 +85,20 @@ templates/MyTheme/
 {/block}
 ```
 
-## Filter Component (filter_parametric.tpl)
+## Filter-Komponente (filter_parametric.tpl)
 
 ```smarty
 <div class="parametric-filter">
     <div class="filter-row">
-        {* Stock filter *}
+        {* Lagerfilter *}
         <div class="filter-dropdown">
             <button class="filter-btn" data-toggle="dropdown">Verfügbarkeit <i class="fa fa-chevron-down"></i></button>
             <div class="filter-dropdown-content">
                 <label><input type="checkbox" name="lf" value="1" {if $Suchergebnisse->nLagerbestandFilter == 1}checked{/if}> Nur auf Lager</label>
             </div>
         </div>
-        
-        {* Merkmal filters *}
+
+        {* Merkmal-Filter *}
         {foreach $Suchergebnisse->MerkmalFilter as $filter}
         <div class="filter-dropdown">
             <button class="filter-btn" data-toggle="dropdown">
@@ -124,8 +124,8 @@ templates/MyTheme/
         </div>
         {/foreach}
     </div>
-    
-    {* Active filter tags *}
+
+    {* Aktive Filter-Tags *}
     <div class="active-filters">
         {foreach $Suchergebnisse->MerkmalFilter as $filter}
             {foreach $filter->oMerkmalWert_arr as $value}
@@ -142,7 +142,7 @@ templates/MyTheme/
 </div>
 ```
 
-## Table View (product_table.tpl)
+## Tabellenansicht (product_table.tpl)
 
 ```smarty
 <div class="product-table-wrapper">
@@ -185,200 +185,43 @@ templates/MyTheme/
 </div>
 ```
 
-## JavaScript (parametric-catalog.js)
+## Listenansicht-Item (item_list.tpl)
 
-```javascript
-class ParametricCatalog {
-    constructor() {
-        this.container = document.querySelector('.parametric-catalog');
-        if (!this.container) return;
-        this.view = this.container.dataset.view || 'gallery';
-        this.compareList = [];
-        this.init();
-    }
-    
-    init() {
-        this.initViewSwitcher();
-        this.initFilters();
-        this.initTableSort();
-        this.initCompare();
-        this.initExport();
-        this.switchView(this.view, false);
-    }
-    
-    // View switching
-    initViewSwitcher() {
-        this.container.querySelectorAll('.view-btn').forEach(btn => {
-            btn.addEventListener('click', () => this.switchView(btn.dataset.view));
-        });
-    }
-    
-    switchView(view, save = true) {
-        // Update buttons
-        this.container.querySelectorAll('.view-btn').forEach(b => 
-            b.classList.toggle('active', b.dataset.view === view));
-        
-        // Switch views
-        this.container.querySelectorAll('.catalog-view').forEach(v => v.style.display = 'none');
-        this.container.querySelector(`.view-${view}`).style.display = '';
-        
-        // Show/hide table tools
-        const tools = this.container.querySelector('.table-tools');
-        if (tools) tools.style.display = view === 'table' ? '' : 'none';
-        
-        this.view = view;
-        
-        // Save preference
-        if (save) {
-            fetch('/io.php', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                body: `io={"name":"setCatalogView","params":["${view}"]}`
-            });
-            localStorage.setItem('catalogView', view);
-        }
-    }
-    
-    // Filter dropdowns
-    initFilters() {
-        this.container.querySelectorAll('[data-toggle="dropdown"]').forEach(btn => {
-            btn.addEventListener('click', e => {
-                e.stopPropagation();
-                const content = btn.nextElementSibling;
-                this.container.querySelectorAll('.filter-dropdown-content.show').forEach(c => {
-                    if (c !== content) c.classList.remove('show');
-                });
-                content.classList.toggle('show');
-            });
-        });
-        
-        document.addEventListener('click', () => {
-            this.container.querySelectorAll('.filter-dropdown-content.show').forEach(c => c.classList.remove('show'));
-        });
-        
-        // Filter search
-        this.container.querySelectorAll('.filter-search').forEach(input => {
-            input.addEventListener('input', e => {
-                const term = e.target.value.toLowerCase();
-                e.target.parentElement.querySelectorAll('.filter-option').forEach(opt => {
-                    opt.style.display = opt.textContent.toLowerCase().includes(term) ? '' : 'none';
-                });
-            });
-        });
-        
-        // Auto-apply filters with debounce
-        let timeout;
-        this.container.querySelectorAll('.filter-options input').forEach(cb => {
-            cb.addEventListener('change', () => {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => this.applyFilters(), 500);
-            });
-        });
-    }
-    
-    applyFilters() {
-        const form = document.createElement('form');
-        form.method = 'GET';
-        form.action = location.pathname;
-        this.container.querySelectorAll('.filter-options input:checked').forEach(cb => {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = cb.name;
-            input.value = cb.value;
-            form.appendChild(input);
-        });
-        document.body.appendChild(form);
-        form.submit();
-    }
-    
-    // Table sorting
-    initTableSort() {
-        this.container.querySelectorAll('th.sortable').forEach(th => {
-            th.addEventListener('click', () => {
-                const key = th.dataset.sort;
-                const order = th.dataset.order === 'asc' ? 'desc' : 'asc';
-                this.container.querySelectorAll('th.sortable').forEach(h => h.dataset.order = '');
-                th.dataset.order = order;
-                this.sortTable(key, order);
-            });
-        });
-    }
-    
-    sortTable(key, order) {
-        const tbody = this.container.querySelector('.product-table tbody');
-        const rows = Array.from(tbody.querySelectorAll('tr'));
-        
-        rows.sort((a, b) => {
-            let av, bv;
-            if (key === 'price') {
-                av = parseFloat(a.dataset.price) || 0;
-                bv = parseFloat(b.dataset.price) || 0;
-            } else if (key === 'stock') {
-                av = parseInt(a.dataset.stock) || 0;
-                bv = parseInt(b.dataset.stock) || 0;
-            } else if (key === 'name') {
-                av = a.querySelector('td:nth-child(3)').textContent.trim();
-                bv = b.querySelector('td:nth-child(3)').textContent.trim();
-            } else if (key.startsWith('param_')) {
-                const id = key.replace('param_', '');
-                av = this.extractNum(a.querySelector(`[data-merkmal="${id}"]`)?.textContent);
-                bv = this.extractNum(b.querySelector(`[data-merkmal="${id}"]`)?.textContent);
-            }
-            if (typeof av === 'string') return order === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
-            return order === 'asc' ? av - bv : bv - av;
-        });
-        
-        rows.forEach(r => tbody.appendChild(r));
-    }
-    
-    extractNum(str) {
-        if (!str) return 0;
-        const m = str.match(/[\d.,]+/);
-        return m ? parseFloat(m[0].replace(',', '.')) : 0;
-    }
-    
-    // Product comparison
-    initCompare() {
-        const btn = this.container.querySelector('#compareBtn');
-        const count = this.container.querySelector('#compareCount');
-        
-        this.container.querySelectorAll('.compare-cb').forEach(cb => {
-            cb.addEventListener('change', e => {
-                if (e.target.checked && this.compareList.length < 4) {
-                    this.compareList.push(e.target.value);
-                } else if (e.target.checked) {
-                    e.target.checked = false;
-                    alert('Max 4 Produkte');
-                } else {
-                    this.compareList = this.compareList.filter(id => id !== e.target.value);
-                }
-                count.textContent = this.compareList.length;
-                btn.disabled = this.compareList.length < 2;
-            });
-        });
-        
-        btn.addEventListener('click', () => {
-            if (this.compareList.length >= 2) {
-                location.href = `/vergleichsliste.php?a=${this.compareList.join('_')}`;
-            }
-        });
-    }
-    
-    // Export
-    initExport() {
-        this.container.querySelector('#exportBtn')?.addEventListener('click', () => {
-            const params = new URLSearchParams(location.search);
-            params.set('export', '1');
-            params.set('format', 'csv');
-            location.href = `${location.pathname}?${params}`;
-        });
-    }
-}
-
-document.addEventListener('DOMContentLoaded', () => new ParametricCatalog());
+```smarty
+<div class="product-list-item" data-id="{$Artikel->kArtikel}">
+    <div class="row align-items-center">
+        <div class="col-2">
+            <input type="checkbox" class="compare-cb" value="{$Artikel->kArtikel}">
+            <img src="{$Artikel->Bilder[0]->cPfadKlein}" class="img-fluid" alt="{$Artikel->cName}">
+        </div>
+        <div class="col-4">
+            <h5><a href="{$Artikel->cURL}">{$Artikel->cName}</a></h5>
+            <small class="text-muted">Art.-Nr.: {$Artikel->cArtNr}</small>
+        </div>
+        <div class="col-4">
+            <div class="row small">
+                {assign var="count" value=0}
+                {foreach $Artikel->oMerkmale_arr as $m}
+                    {if $count < 6}
+                    <div class="col-6">
+                        <strong>{$m->cName}:</strong> {$m->cWert}
+                    </div>
+                    {assign var="count" value=$count+1}
+                    {/if}
+                {/foreach}
+            </div>
+        </div>
+        <div class="col-2 text-right">
+            <div class="price h5">{$Artikel->Preise->cVKLocalized[0]}</div>
+            <button class="btn btn-sm btn-primary add-cart" data-id="{$Artikel->kArtikel}">
+                <i class="fa fa-cart-plus"></i> Kaufen
+            </button>
+        </div>
+    </div>
+</div>
 ```
 
-## Bootstrap.php Additions
+## Bootstrap.php Erweiterungen
 
 ```php
 public function boot(): void
@@ -403,153 +246,28 @@ protected function handleIO(): void
 protected function handleExport(): void
 {
     if (($_GET['export'] ?? '') !== '1') return;
-    
+
     $filename = 'produkte_' . date('Y-m-d') . '.csv';
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="' . $filename . '"');
-    
+
     $out = fopen('php://output', 'w');
     fprintf($out, chr(0xEF) . chr(0xBB) . chr(0xBF)); // UTF-8 BOM
-    
-    // Headers
+
     fputcsv($out, ['Art.-Nr.', 'Name', 'Preis', 'Lager'], ';');
-    
-    // Data from current filter results
-    // Implementation depends on how you access filtered products
-    
+    // Daten-Implementierung hier
+
     fclose($out);
     exit;
 }
 ```
 
-## SCSS (_parametric-catalog.scss)
+## JTL-Wawi Konfiguration
 
-```scss
-.parametric-catalog {
-    .catalog-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1.5rem;
-        padding-bottom: 1rem;
-        border-bottom: 3px solid $primary;
-    }
-    
-    .catalog-toolbar {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        margin-bottom: 1rem;
-        
-        .table-tools { display: none; }
-    }
-    
-    .view-btn.active {
-        background: $primary;
-        color: white;
-    }
-}
+Merkmale für Produkte anlegen:
 
-// Filters
-.parametric-filter {
-    background: $gray-100;
-    padding: 1rem;
-    border-radius: $border-radius;
-    margin-bottom: 1rem;
-    
-    .filter-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    }
-    
-    .filter-dropdown {
-        position: relative;
-    }
-    
-    .filter-btn {
-        padding: 0.5rem 1rem;
-        background: white;
-        border: 1px solid $border-color;
-        border-radius: $border-radius;
-        cursor: pointer;
-        
-        .badge { margin-left: 0.5rem; }
-    }
-    
-    .filter-dropdown-content {
-        display: none;
-        position: absolute;
-        top: 100%;
-        left: 0;
-        z-index: 1000;
-        min-width: 250px;
-        background: white;
-        border: 1px solid $border-color;
-        border-radius: $border-radius;
-        box-shadow: $box-shadow;
-        padding: 0.5rem;
-        
-        &.show { display: block; }
-    }
-    
-    .filter-option {
-        display: block;
-        padding: 0.375rem 0.5rem;
-        cursor: pointer;
-        
-        &:hover { background: $gray-100; }
-    }
-    
-    .filter-tag {
-        display: inline-flex;
-        align-items: center;
-        background: $primary;
-        color: white;
-        padding: 0.25rem 0.5rem;
-        border-radius: 50px;
-        font-size: 0.8rem;
-        margin: 0.25rem;
-        
-        a { color: white; margin-left: 0.5rem; }
-    }
-}
-
-// Table
-.product-table {
-    font-size: 0.85rem;
-    
-    th.sortable {
-        cursor: pointer;
-        &:hover { background: $gray-200; }
-        &[data-order="asc"]::after { content: " ↑"; }
-        &[data-order="desc"]::after { content: " ↓"; }
-    }
-}
-
-// Responsive
-@media (max-width: 767px) {
-    .product-table thead { display: none; }
-    .product-table tr {
-        display: block;
-        margin-bottom: 1rem;
-        border: 1px solid $border-color;
-        padding: 0.75rem;
-    }
-    .product-table td {
-        display: flex;
-        justify-content: space-between;
-        &::before { content: attr(data-label); font-weight: bold; }
-    }
-}
-```
-
-## JTL-Wawi Configuration
-
-Create Merkmale (attributes) for your products:
-
-| Name | German | Examples |
-|------|--------|----------|
+| Name | Deutsch | Beispiele |
+|------|---------|-----------|
 | Resistance | Widerstand | 10kΩ, 4.7kΩ |
 | Package | Bauform | 0402, 0805 |
 | Tolerance | Toleranz | ±1%, ±5% |
