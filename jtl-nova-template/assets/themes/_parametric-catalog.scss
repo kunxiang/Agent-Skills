@@ -1,0 +1,97 @@
+// Parametric Catalog Styles - JTL-Shop 5
+// Import in your main SCSS: @import "parametric-catalog";
+
+.parametric-catalog {
+  .catalog-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 3px solid $primary;
+    h1 { margin: 0; }
+  }
+  .catalog-toolbar {
+    display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;
+    .table-tools { display: none; }
+  }
+  .view-btn.active { background: $primary; color: #fff; border-color: $primary; }
+}
+
+// Filters
+.parametric-filter {
+  background: $gray-100; padding: 1rem; border-radius: $border-radius; margin-bottom: 1rem;
+  .filter-row { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .filter-dropdown { position: relative; }
+  .filter-btn {
+    padding: .5rem 1rem; background: #fff; border: 1px solid $border-color;
+    border-radius: $border-radius; cursor: pointer;
+    &:hover { border-color: $primary; }
+    .badge { margin-left: .5rem; font-size: .7rem; }
+  }
+  .filter-dropdown-content {
+    display: none; position: absolute; top: 100%; left: 0; z-index: 1000;
+    min-width: 250px; max-height: 350px; overflow-y: auto;
+    background: #fff; border: 1px solid $border-color;
+    border-radius: $border-radius; box-shadow: $box-shadow; padding: .5rem;
+    &.show { display: block; }
+  }
+  .filter-search { width: 100%; margin-bottom: .5rem; }
+  .filter-option {
+    display: flex; align-items: center; padding: .375rem .5rem; cursor: pointer;
+    &:hover { background: $gray-100; }
+    input { margin-right: .5rem; }
+    small { margin-left: auto; color: $text-muted; }
+  }
+  .active-filters { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(0,0,0,.1); }
+  .filter-tag {
+    display: inline-flex; align-items: center;
+    background: $primary; color: #fff; padding: .25rem .5rem;
+    border-radius: 50px; font-size: .8rem; margin: .25rem;
+    a { color: #fff; margin-left: .5rem; text-decoration: none; font-weight: bold; }
+  }
+}
+
+// Table
+.product-table-wrapper { overflow-x: auto; border: 1px solid $border-color; border-radius: $border-radius; }
+.product-table {
+  margin: 0; font-size: .85rem; white-space: nowrap;
+  th { background: $gray-100; font-weight: 600; position: sticky; top: 0; }
+  th.sortable {
+    cursor: pointer; user-select: none;
+    &:hover { background: $gray-200; }
+    &[data-order="asc"]::after { content: " ↑"; color: $primary; }
+    &[data-order="desc"]::after { content: " ↓"; color: $primary; }
+  }
+  tr:hover { background: rgba($primary, .05); }
+  img { width: 50px; height: 50px; object-fit: contain; }
+}
+
+// List view
+.view-list .product-list-item {
+  border: 1px solid $border-color; border-radius: $border-radius;
+  padding: 1rem; margin-bottom: 1rem;
+  display: flex; gap: 1rem;
+  &:hover { box-shadow: $box-shadow; }
+  .product-image { width: 100px; flex-shrink: 0; }
+  .product-info { flex: 1; }
+  .product-params { font-size: .85rem; margin-top: .5rem; }
+  .product-price { font-weight: bold; color: $primary; font-size: 1.1rem; }
+}
+
+// Responsive
+@media (max-width: 991px) {
+  .filter-dropdown-content {
+    position: fixed; bottom: 0; left: 0; right: 0; top: auto;
+    max-height: 60vh; border-radius: $border-radius $border-radius 0 0;
+  }
+}
+@media (max-width: 767px) {
+  .catalog-toolbar { flex-wrap: wrap; }
+  .product-table thead { display: none; }
+  .product-table tr {
+    display: block; margin-bottom: 1rem; border: 1px solid $border-color;
+    border-radius: $border-radius; padding: .75rem;
+  }
+  .product-table td {
+    display: flex; justify-content: space-between; padding: .5rem 0; white-space: normal;
+    &::before { content: attr(data-label); font-weight: 600; }
+    &:first-child, &:nth-child(2) { display: none; }
+  }
+}
