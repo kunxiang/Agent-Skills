@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    JTL-Shop 5 Plugin Template
+    ==========================
+
+    Anleitung:
+    1. Ersetze alle {{PLACEHOLDER}} mit deinen Werten
+    2. Lösche nicht benötigte Abschnitte
+    3. Ordnername = PluginID (z.B. MeineFirma_MeinPlugin)
+
+    Pflichtfelder:
+    - Name, Description, Author, URL
+    - PluginID, XMLVersion, MinShopVersion
+    - CreateDate, Version
+-->
+<jtlshopplugin>
+    <!-- ======================= -->
+    <!-- GRUNDINFORMATIONEN      -->
+    <!-- ======================= -->
+    <Name>{{PLUGIN_NAME}}</Name>
+    <Description>{{PLUGIN_DESCRIPTION}}</Description>
+    <Author>{{AUTHOR_NAME}}</Author>
+    <URL>{{AUTHOR_URL}}</URL>
+    <PluginID>{{COMPANY}}_{{PLUGIN_ID}}</PluginID>
+
+    <!-- XML Schema Version: 100 (Shop 5.0+), 101, 102 -->
+    <XMLVersion>100</XMLVersion>
+
+    <!-- Mindestens unterstützte Shop-Version -->
+    <MinShopVersion>5.0.0</MinShopVersion>
+
+    <!-- Erstellungsdatum im Format YYYY-MM-DD -->
+    <CreateDate>{{YEAR}}-{{MONTH}}-{{DAY}}</CreateDate>
+
+    <!-- Plugin-Version (SemVer empfohlen) -->
+    <Version>1.0.0</Version>
+
+    <!-- Optional: Für JTL-Store Vertrieb -->
+    <!-- <ExsID>xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</ExsID> -->
+
+    <!-- Optional: Lizenzprüfung -->
+    <!-- <LicenceClass>{{LICENCE_CLASS}}</LicenceClass> -->
+    <!-- <LicenceClassFile>{{LICENCE_FILE}}.php</LicenceClassFile> -->
+
+    <!-- ======================= -->
+    <!-- INSTALLATIONSBLOCK      -->
+    <!-- ======================= -->
+    <Install>
+        <!-- Cache-Tags die bei Installation geleert werden -->
+        <FlushTags>CACHING_GROUP_CORE</FlushTags>
+        <!-- Weitere: CACHING_GROUP_ARTICLE, CACHING_GROUP_CATEGORY, CACHING_GROUP_TEMPLATE -->
+
+        <!-- ======================= -->
+        <!-- PLUGIN-EINSTELLUNGEN    -->
+        <!-- ======================= -->
+        <PluginSettings>
+            <!-- Textfeld -->
+            <Setting type="text" sort="1" name="api_key">
+                <Name>API-Schlüssel</Name>
+                <Description>Ihr API-Schlüssel für den externen Service</Description>
+                <DefaultValue></DefaultValue>
+            </Setting>
+
+            <!-- Checkbox -->
+            <Setting type="checkbox" sort="2" name="is_active">
+                <Name>Plugin aktivieren</Name>
+                <Description>Aktiviert/Deaktiviert die Plugin-Funktionalität</Description>
+                <DefaultValue>1</DefaultValue>
+            </Setting>
+
+            <!-- Dropdown (Selectbox) -->
+            <Setting type="selectbox" sort="3" name="display_mode">
+                <Name>Anzeigemodus</Name>
+                <Description>Wählen Sie den gewünschten Anzeigemodus</Description>
+                <DefaultValue>standard</DefaultValue>
+                <SelectboxOptions>
+                    <Option value="standard" sort="1">Standard</Option>
+                    <Option value="compact" sort="2">Kompakt</Option>
+                    <Option value="extended" sort="3">Erweitert</Option>
+                </SelectboxOptions>
+            </Setting>
+
+            <!-- Radio-Buttons -->
+            <Setting type="radio" sort="4" name="position">
+                <Name>Widget-Position</Name>
+                <DefaultValue>right</DefaultValue>
+                <RadioOptions>
+                    <Option value="left" sort="1">Links</Option>
+                    <Option value="right" sort="2">Rechts</Option>
+                    <Option value="center" sort="3">Zentriert</Option>
+                </RadioOptions>
+            </Setting>
+
+            <!-- Textarea -->
+            <Setting type="textarea" sort="5" name="custom_css">
+                <Name>Eigenes CSS</Name>
+                <Description>Zusätzliche CSS-Regeln</Description>
+                <DefaultValue></DefaultValue>
+            </Setting>
+
+            <!-- Passwort -->
+            <Setting type="password" sort="6" name="api_secret">
+                <Name>API Secret</Name>
+                <Description>Wird verschlüsselt gespeichert</Description>
+                <DefaultValue></DefaultValue>
+            </Setting>
+
+            <!-- Farbwähler -->
+            <Setting type="color" sort="7" name="accent_color">
+                <Name>Akzentfarbe</Name>
+                <DefaultValue>#007bff</DefaultValue>
+            </Setting>
+        </PluginSettings>
+
+        <!-- ======================= -->
+        <!-- ADMIN-MENÜ              -->
+        <!-- ======================= -->
+        <PluginAdminMenu>
+            <!-- Jeder Customlink = Tab im Plugin-Backend -->
+            <Customlink sort="1">
+                <Name>Konfiguration</Name>
+                <Filename>config.php</Filename>
+            </Customlink>
+
+            <!-- Weitere Admin-Seiten -->
+            <!--
+            <Customlink sort="2">
+                <Name>Statistiken</Name>
+                <Filename>stats.php</Filename>
+            </Customlink>
+            <Customlink sort="3">
+                <Name>Logs</Name>
+                <Filename>logs.php</Filename>
+            </Customlink>
+            -->
+        </PluginAdminMenu>
+
+        <!-- ======================= -->
+        <!-- FRONTEND-LINKS          -->
+        <!-- (Eigene Seiten im Shop) -->
+        <!-- ======================= -->
+        <!--
+        <FrontendLink>
+            <Filename>meine_seite.php</Filename>
+            <Name>Meine Seite</Name>
+            <VisibleName>Öffentlicher Seitentitel</VisibleName>
+            <TemplateFile>meine_seite.tpl</TemplateFile>
+            <NoFollow>0</NoFollow>
+            <LinkGroup>hidden</LinkGroup>
+        </FrontendLink>
+        -->
+
+        <!-- ======================= -->
+        <!-- CRON-JOBS               -->
+        <!-- ======================= -->
+        <!--
+        <Crons>
+            <Cron>
+                <Name>Tägliche Synchronisation</Name>
+                <Description>Synchronisiert Daten mit externem Service</Description>
+                <Filename>sync_cron.php</Filename>
+                <Interval>24</Interval>
+                <IntervalType>H</IntervalType>
+            </Cron>
+        </Crons>
+        -->
+        <!-- IntervalType: M (Minuten), H (Stunden), D (Tage) -->
+
+        <!-- ======================= -->
+        <!-- DASHBOARD-WIDGETS       -->
+        <!-- ======================= -->
+        <!--
+        <AdminWidgets>
+            <Widget sort="1">
+                <Name>Plugin-Statistiken</Name>
+                <Description>Zeigt Plugin-Statistiken im Dashboard</Description>
+                <Container>center</Container>
+                <Class>StatsWidget</Class>
+            </Widget>
+        </AdminWidgets>
+        -->
+        <!-- Container: center, left, right -->
+
+        <!-- ======================= -->
+        <!-- OPC PORTLETS            -->
+        <!-- ======================= -->
+        <!--
+        <Portlets>
+            <Portlet>
+                <Name>Mein Portlet</Name>
+                <Class>MeinPortlet</Class>
+            </Portlet>
+        </Portlets>
+        -->
+
+        <!-- ======================= -->
+        <!-- CONSENT MANAGER         -->
+        <!-- (Für Tracking/Cookies)  -->
+        <!-- ======================= -->
+        <!--
+        <ConsentManager>
+            <Vendor>
+                <ID>mein_tracking</ID>
+                <Name>Mein Tracking Service</Name>
+                <Description>Beschreibung des Tracking-Dienstes</Description>
+                <Purpose>Analyse</Purpose>
+                <Company>Tracking GmbH</Company>
+                <PrivacyPolicy>https://tracking.example.com/privacy</PrivacyPolicy>
+            </Vendor>
+        </ConsentManager>
+        -->
+
+        <!-- ======================= -->
+        <!-- MAIL-TEMPLATES          -->
+        <!-- ======================= -->
+        <!--
+        <Mails>
+            <Mail>
+                <Name>Benachrichtigung</Name>
+                <Type>text/html</Type>
+                <Module>mein_mail_modul</Module>
+                <Active>1</Active>
+                <Subject>Betreff: {$Bestellung->cBestellNr}</Subject>
+                <BodyHtml>mail_notification.tpl</BodyHtml>
+            </Mail>
+        </Mails>
+        -->
+
+    </Install>
+</jtlshopplugin>
