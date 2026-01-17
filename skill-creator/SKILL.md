@@ -13,116 +13,154 @@ description: "Create well-structured Claude Agent Skills following official spec
 | Name format | lowercase, alphanumeric, hyphens only, max 64 chars |
 | Description max | 1024 characters |
 | Required frontmatter | `name`, `description` |
+| Description person | **Third person only** (not "I" or "You") |
+| Reserved words | Cannot use "anthropic", "claude" in name |
+
+## Core Concept: What Skills Actually Are
+
+Skills are **prompt templates** that inject domain-specific instructions into conversation context. They are NOT executable code. When invoked:
+
+1. **Conversation context modified**: Instructions injected as messages
+2. **Execution context modified**: Tool permissions and model may change
+3. **Selection via LLM reasoning**: Claude reads descriptions to decide which skill matches
 
 ## Skill Directory Structure
 
 ```
 skill-name/
 ├── SKILL.md              # Required - Core instructions (< 500 lines)
-├── references/           # Optional - Documentation loaded on-demand
-│   ├── api-docs.md
-│   └── examples.md
-├── scripts/              # Optional - Executable code (not loaded into context)
+├── references/           # Text loaded into context via Read tool
+│   └── detailed-docs.md
+├── scripts/              # Executed via Bash, NOT loaded into context
 │   └── helper.py
-└── assets/               # Optional - Templates, images, boilerplate
-    └── template.md
+└── assets/               # Referenced by path, NOT loaded into context
+    └── template.html
 ```
+
+**Key distinction**:
+- `references/` → Claude reads content into context (costs tokens)
+- `scripts/` → Claude executes directly (efficient, no token cost)
+- `assets/` → Claude references path only (no token cost)
 
 ## Required Frontmatter
 
 ```yaml
 ---
 name: skill-name
-description: "What this skill does. Use when: (trigger conditions)"
+description: "Processes X and generates Y. Use when user wants to Z or mentions keywords A, B, C."
 ---
 ```
 
-**Critical**: The `description` is the PRIMARY triggering mechanism. Claude uses it to decide when to activate the skill. Include all "when to use" information here, NOT in the body.
+**Critical Rules**:
+1. Description is the **PRIMARY triggering mechanism**
+2. Write in **third person**: "Processes files" not "I process files"
+3. Include both **what it does** AND **when to use it**
+4. Include **trigger keywords** users would naturally say
 
 ## Optional Frontmatter Fields
 
 | Field | Purpose | Example |
 |-------|---------|---------|
-| `allowed-tools` | Restrict available tools | `Read, Grep, Glob` |
+| `allowed-tools` | Restrict tools | `Read, Grep, Glob` or `Bash(python:*)` |
 | `model` | Override model | `claude-sonnet-4-20250514` |
 | `context` | Isolated execution | `fork` |
 | `agent` | Agent type for fork | `Explore`, `Plan`, `general-purpose` |
 | `user-invocable` | Show in slash menu | `false` |
+| `disable-model-invocation` | Prevent auto-invoke | `true` |
 
 ## Creation Process
 
-### Step 1: Gather Requirements
-- Collect 3-5 concrete usage examples
-- Identify what Claude doesn't already know
-- Determine required tools and restrictions
+### Step 1: Evaluation-Driven Development
+1. Run Claude on representative tasks WITHOUT a skill
+2. Document specific failures or missing context
+3. Create 3+ test scenarios that expose these gaps
+4. Only then write the skill to address actual gaps
 
 ### Step 2: Design Structure
-- Outline main instructions for SKILL.md
-- Plan references for detailed documentation
-- Identify scripts for automation
-- List assets for templates/boilerplate
+- What goes in SKILL.md (< 500 lines)
+- What goes in references/ (detailed docs)
+- What goes in scripts/ (automation)
+- What goes in assets/ (templates)
 
-### Step 3: Write SKILL.md
+### Step 3: Write SKILL.md Body
 
-**Body Structure:**
+**Recommended Structure**:
 ```markdown
 # Skill Title
 
-## Quick Reference
-[Essential lookup table]
+## Quick Start
+[Minimal working example]
 
 ## Core Instructions
-[Step-by-step guidance - imperative form]
+[Step-by-step - use imperative form: "Analyze", not "You should analyze"]
 
 ## Examples
-[Concrete, minimal examples]
+[Input/output pairs]
 
 ## References
-- For [topic], see [file.md](references/file.md)
+- For X details: [references/x.md](references/x.md)
 ```
 
-### Step 4: Validate
-
-Use checklist from [references/validation-checklist.md](references/validation-checklist.md)
+### Step 4: Iterate with Claude
+1. Test skill with Claude B (fresh instance)
+2. Observe where it struggles
+3. Refine with Claude A (your helper)
+4. Repeat until reliable
 
 ## Core Principles
 
 ### 1. Concise is Key
-- Only add information Claude doesn't already have
-- Prefer examples over verbose explanations
-- Claude is already very smart - don't over-explain
+Challenge each piece: "Does Claude really need this? Can I assume Claude knows this?"
 
-### 2. Progressive Disclosure
-- SKILL.md = Overview + Navigation (< 500 lines)
-- References = Detailed docs (loaded on-demand)
-- Scripts = Executable code (run, not loaded)
-- Assets = Output templates (copied, not loaded)
+**Good** (~50 tokens):
+```markdown
+Use pdfplumber for text extraction:
+import pdfplumber
+with pdfplumber.open("file.pdf") as pdf:
+    text = pdf.pages[0].extract_text()
+```
 
-### 3. Degrees of Freedom
-| Level | Format | Use Case |
-|-------|--------|----------|
-| High | Text guidance | Multiple valid approaches |
-| Medium | Pseudocode | Preferred pattern exists |
-| Low | Exact scripts | Operations are fragile |
+**Bad** (~150 tokens): "PDF files are a common format that contains text..."
 
-## Templates
+### 2. Degrees of Freedom
 
-- Basic skill: [assets/templates/basic-skill.md](assets/templates/basic-skill.md)
-- Complex skill: [assets/templates/complex-skill.md](assets/templates/complex-skill.md)
-- Frontmatter examples: [references/frontmatter-examples.md](references/frontmatter-examples.md)
+| Level | When to Use | Format |
+|-------|-------------|--------|
+| **High** | Multiple valid approaches | Text guidance |
+| **Medium** | Preferred pattern exists | Pseudocode with parameters |
+| **Low** | Operations are fragile | Exact scripts, no modification |
 
-## Detailed References
+### 3. Progressive Disclosure
+- At startup: Only name + description loaded (~100 tokens)
+- On activation: SKILL.md body loaded
+- On demand: References loaded as needed
 
-- **Full Specification**: [references/specification.md](references/specification.md)
-- **Frontmatter Fields**: [references/frontmatter-examples.md](references/frontmatter-examples.md)
-- **Design Patterns**: [references/design-patterns.md](references/design-patterns.md)
-- **Validation Checklist**: [references/validation-checklist.md](references/validation-checklist.md)
-- **Common Mistakes**: [references/common-mistakes.md](references/common-mistakes.md)
+## Naming Conventions
 
-## Anti-Patterns to Avoid
+**Recommended**: Gerund form (verb + -ing)
+- `processing-pdfs`, `analyzing-spreadsheets`, `testing-code`
 
-1. **DO NOT** put "When to use" sections in the body (use description)
+**Acceptable**: Noun phrases or action-oriented
+- `pdf-processing`, `process-pdfs`
+
+**Avoid**: `helper`, `utils`, `tools`, `data`
+
+## Templates & References
+
+- **Basic template**: [assets/templates/basic-skill.md](assets/templates/basic-skill.md)
+- **Complex template**: [assets/templates/complex-skill.md](assets/templates/complex-skill.md)
+- **Full specification**: [references/specification.md](references/specification.md)
+- **Best practices**: [references/best-practices.md](references/best-practices.md)
+- **Design patterns**: [references/design-patterns.md](references/design-patterns.md)
+- **Validation checklist**: [references/validation-checklist.md](references/validation-checklist.md)
+- **Common mistakes**: [references/common-mistakes.md](references/common-mistakes.md)
+
+## Anti-Patterns
+
+1. **DO NOT** put "When to use" in body (use description)
 2. **DO NOT** exceed 500 lines in SKILL.md
-3. **DO NOT** duplicate content between SKILL.md and references
-4. **DO NOT** create README.md, CHANGELOG.md, or auxiliary docs
-5. **DO NOT** deeply nest references (max 1 level from SKILL.md)
+3. **DO NOT** use first/second person in description
+4. **DO NOT** nest references deeper than 1 level
+5. **DO NOT** offer multiple tool options without a default
+6. **DO NOT** include time-sensitive information
+7. **DO NOT** use Windows-style paths (use forward slashes)
