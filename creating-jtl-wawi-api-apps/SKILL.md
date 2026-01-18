@@ -255,16 +255,76 @@ curl -X GET "http://localhost:5883/authentication/{REGISTRATION_ID}" \
   -H "X-ChallengeCode: mein-code"
 ```
 
+## ⚠️ KRITISCHE HINWEISE (aus Community-Erfahrungen)
+
+### 1. Authorization Header Format - HÄUFIGSTER FEHLER!
+
+**FALSCH** ❌:
+```
+Authorization: FB622234-98A7-46FA-A01B-06C9D0971AAF
+Authorization: Bearer FB622234-98A7-46FA-A01B-06C9D0971AAF
+```
+
+**RICHTIG** ✓:
+```
+Authorization: Wawi FB622234-98A7-46FA-A01B-06C9D0971AAF
+```
+
+> Forum-Zitat: "Es fehlt das 'Wawi' vor dem API Key. Man sollte besser die Doku anschauen."
+
+### 2. JTL-Wawi UI: "Neue Oberfläche" erforderlich!
+
+Das Dialogfenster `Admin → App-Registrierung` ist **NUR** in der neuen Oberfläche verfügbar:
+- Starten über: `C:\Program Files (x86)\JTL-Software\JTL-SharpWawi.exe`
+- NICHT über die alte WaWi-Oberfläche!
+
+### 3. Registrierung muss ZUERST in JTL-Wawi gestartet werden
+
+```
+REIHENFOLGE:
+1. JTL-Wawi öffnen → Admin → App-Registrierung → Hinzufügen → Weiter
+2. JTL-Wawi wartet jetzt auf API-Anfrage ("Registrierung beginnen")
+3. DANN erst POST /authentication senden
+4. JTL-Wawi springt automatisch weiter
+5. Berechtigungen bestätigen → Fertigstellen
+6. API-Key wird angezeigt (NUR EINMAL!)
+```
+
+### 4. Datenbank-Feld bei OnPrem (nicht "eazybusiness"!)
+
+Wenn Ihr Mandant NICHT "eazybusiness" heißt, muss der **exakte Tabellenname** angegeben werden:
+```bash
+# FALSCH (wenn Mandant anders heißt):
+JTL.Wawi.Rest.exe -d eazybusiness
+
+# RICHTIG:
+JTL.Wawi.Rest.exe -d IhrMandantenName
+```
+
+### 5. Scopes minimal halten!
+
+> Forum-Erfahrung: "Bei manchen Nutzern hatte die Registrierung wegen zu vieler Scopes nicht funktioniert."
+
+**Empfehlung**: Mit `["all.read"]` starten, dann erweitern.
+
+### 6. NICHT als Windows-Dienst bei Ersteinrichtung!
+
+Die erste Registrierung sollte **nicht** mit der Start-Art "als Windows-Dienst" durchgeführt werden.
+
 ## Häufige Fehler
 
-| Problem | Lösung |
-|---------|--------|
-| 401 Unauthorized | App nicht in JTL-Wawi genehmigt |
-| 403 Forbidden | Fehlende Scopes oder falscher API-Key |
-| X-ChallengeCode Fehler | Muss bei allen Anfragen identisch sein |
-| Keine Token-Antwort | Polling fortsetzen, Genehmigung abwarten |
-| Connection refused | REST-Server nicht gestartet (OnPrem) |
-| API-Key verloren | Neue App-Registrierung erforderlich |
+| Problem | Ursache | Lösung |
+|---------|---------|--------|
+| **401 Unauthorized** | "Wawi" Prefix fehlt | `Authorization: Wawi {KEY}` verwenden |
+| **401 Unauthorized** | Falsche X-AppID/X-AppVersion | Muss mit Registrierung übereinstimmen |
+| **401 Unauthorized** | App nicht genehmigt | In JTL-Wawi "Fertigstellen" klicken |
+| **403 Forbidden** | Fehlende Scopes | Scope bei Registrierung hinzufügen |
+| **Keine Reaktion** | Reihenfolge falsch | Erst in JTL-Wawi starten, dann API |
+| **Menüpunkt fehlt** | Falsche WaWi-Version | Neue Oberfläche (SharpWawi.exe) nutzen |
+| **Connection refused** | Server nicht gestartet | `JTL.Wawi.Rest.exe` starten |
+| **Registrierung hängt** | Falscher Mandant/DB | Datenbank-Parameter prüfen |
+| **API-Key verloren** | Nur einmal angezeigt | Neue App registrieren (keine Wiederherstellung!) |
+| **Lizenzfehler** | Keine API-Lizenz | JTL-Kundencenter: API-Lizenz buchen |
 
 ## Referenzen
 

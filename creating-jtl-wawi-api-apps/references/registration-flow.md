@@ -58,30 +58,69 @@ Die App-Registrierung bei der JTL-Wawi API ist ein dreistufiger Prozess, der ein
 
 ### Phase 2: Manuelle Genehmigung in JTL-Wawi
 
+**⚠️ WICHTIG: Korrekte Reihenfolge beachten!**
+
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│                   PHASE 2: MANUELLE GENEHMIGUNG                   │
+│           PHASE 2: MANUELLE GENEHMIGUNG (SCHRITT FÜR SCHRITT)     │
 ├──────────────────────────────────────────────────────────────────┤
 │                                                                    │
-│   1. JTL-Wawi öffnen (neue Oberfläche)                            │
+│   VORHER (bevor POST /authentication gesendet wird!):             │
+│   ─────────────────────────────────────────────────               │
+│   1. JTL-Wawi öffnen (NEUE Oberfläche: JTL-SharpWawi.exe)        │
 │                                                                    │
 │   2. Navigation: Admin → App-Registrierung                        │
 │                                                                    │
-│   3. Ihre App erscheint mit:                                      │
-│      - App-ID                                                      │
-│      - Anzeigename                                                 │
-│      - Angeforderte Berechtigungen (Scopes)                       │
+│   3. Klick auf "Hinzufügen"                                       │
 │                                                                    │
-│   4. Optionen:                                                     │
-│      [✓ Genehmigen]    [✗ Ablehnen]                               │
+│   4. Einführungsseite → "Weiter" klicken                         │
 │                                                                    │
-│   5. Bei Genehmigung:                                              │
-│      - Scopes können angepasst werden                              │
-│      - API-Key wird generiert                                      │
-│      - App erhält Zugriff                                          │
+│   5. Seite "Registrierung beginnen" wird angezeigt               │
+│      ┌─────────────────────────────────────────────────┐          │
+│      │  JTL-Wawi wartet jetzt auf API-Anfrage...      │          │
+│      │  (Der "Weiter"-Button ist ausgegraut)           │          │
+│      └─────────────────────────────────────────────────┘          │
+│                                                                    │
+│   JETZT: POST /authentication von Ihrer App senden                │
+│   ────────────────────────────────────────────────                │
+│                                                                    │
+│   NACHHER (nach erfolgreicher API-Anfrage):                       │
+│   ─────────────────────────────────────────                       │
+│   6. JTL-Wawi springt AUTOMATISCH auf "Anwendungsinformationen"  │
+│      - App-ID wird angezeigt                                      │
+│      - Angeforderte Berechtigungen (Scopes) werden angezeigt     │
+│                                                                    │
+│   7. Optionale Berechtigungen aktivieren/deaktivieren            │
+│                                                                    │
+│   8. "Weiter" klicken                                             │
+│                                                                    │
+│   9. Übersichtsseite → "Fertigstellen" klicken                   │
+│                                                                    │
+│   10. API-Key wird angezeigt (NUR JETZT, EINMALIG!)              │
+│       ┌─────────────────────────────────────────────────┐         │
+│       │  API Token: FB622234-98A7-46FA-A01B-06C9D0971AAF│         │
+│       │                                                  │         │
+│       │  ⚠️ Dieser Schlüssel wird NICHT erneut angezeigt!│         │
+│       │     Kopieren Sie ihn JETZT und speichern Sie    │         │
+│       │     ihn an einem sicheren Ort!                  │         │
+│       └─────────────────────────────────────────────────┘         │
 │                                                                    │
 └──────────────────────────────────────────────────────────────────┘
 ```
+
+### Hinweis zur "Neuen Oberfläche"
+
+Das App-Registrierungsfenster ist **NUR** in der neuen JTL-Wawi Oberfläche verfügbar:
+
+```
+RICHTIG:  C:\Program Files (x86)\JTL-Software\JTL-SharpWawi.exe
+FALSCH:   C:\Program Files (x86)\JTL-Software\JTL-Wawi.exe (alte Oberfläche)
+```
+
+Falls der Menüpunkt `Admin → App-Registrierung` nicht sichtbar ist:
+- Prüfen Sie, ob Sie die richtige Wawi-Version gestartet haben
+- Prüfen Sie, ob Sie Admin-Rechte haben
+- Prüfen Sie, ob die API-Lizenz im JTL-Kundencenter gebucht wurde
 
 ### Phase 3: API-Key abrufen (Polling)
 
