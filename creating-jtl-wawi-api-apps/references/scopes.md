@@ -4,9 +4,54 @@
 
 Scopes definieren die Berechtigungen einer App. Sie werden bei der Registrierung in `MandatoryApiScopes` (Pflicht) oder `OptionalApiScopes` (Optional) angegeben.
 
-## Wichtiger Hinweis
+## ⚠️ KRITISCHE HINWEISE (aus Community-Erfahrungen)
 
-Der Scope `all.read` gewährt Lesezugriff auf alle Ressourcen. Für Schreiboperationen sind spezifische Scopes erforderlich.
+### 1. Wo findet man die Scopes?
+
+> Forum-Zitat: "Bei jedem Endpoint in der Dokumentation kommt direkt oben nach der Beschreibung ein Punkt 'AUTHORIZATIONS:', den man aufklappen muss."
+
+**Swagger UI**: `http://localhost:5883/swagger` → Endpoint auswählen → "AUTHORIZATIONS" aufklappen
+
+### 2. Kein `all.write` oder `all.create`!
+
+```
+✓ all.read          → Existiert (Lesezugriff auf alles)
+✗ all.write         → Existiert NICHT!
+✗ all.create        → Existiert NICHT!
+```
+
+> Forum: "Für die Leseberechtigung existiert ein 'all.read' - ein 'all.write' oder 'all.create' ist jedoch aktuell nicht vorhanden."
+
+**Konsequenz**: Für jede Schreiboperation muss der spezifische Scope angegeben werden!
+
+### 3. Zu viele Scopes können Registrierung blockieren!
+
+> Forum-Erfahrung: "Bei manchen Nutzern hatte die Registrierung wegen zu vieler Scopes nicht funktioniert."
+
+**Empfehlung**:
+1. Mit `["all.read"]` starten
+2. Schreibscopes nach Bedarf hinzufügen
+3. Bei Problemen: Scopes reduzieren, neu registrieren
+
+### 4. Groß-/Kleinschreibung beachten!
+
+Scopes sind **case-sensitive**:
+```
+✗ Customer.CreateCustomer    ❌
+✗ CUSTOMER.CREATECUSTOMER    ❌
+✓ customer.createcustomer    ✓
+```
+
+### 5. Scopes aus swagger.json extrahieren
+
+Für eine vollständige Liste aller Scopes:
+```bash
+# 1. Swagger JSON herunterladen
+curl http://localhost:5883/swagger/v1/swagger.json -o swagger.json
+
+# 2. Scopes extrahieren (mit jq)
+jq '.components.securitySchemes.oauth2.flows.clientCredentials.scopes | keys' swagger.json
+```
 
 ## Scope-Format
 
@@ -15,6 +60,16 @@ Der Scope `all.read` gewährt Lesezugriff auf alle Ressourcen. Für Schreibopera
 ```
 
 Beispiel: `customer.createcustomer` = Kunden anlegen
+
+### Aktions-Suffixe
+
+| Suffix | HTTP-Methode | Bedeutung |
+|--------|--------------|-----------|
+| `get...` | GET | Einzelnen Datensatz abrufen |
+| `query...` | POST | Mehrere Datensätze suchen/filtern |
+| `create...` | POST | Neuen Datensatz anlegen |
+| `update...` | PUT | Datensatz aktualisieren |
+| `delete...` | DELETE | Datensatz löschen |
 
 ## Globale Scopes
 
@@ -295,3 +350,75 @@ Für eine Lese-App:
 3. **Optionale Scopes**: Für Funktionen, die nicht immer benötigt werden
 4. **Dokumentation prüfen**: Scope-Anforderungen je Endpoint in Swagger
 5. **Nachträgliche Änderung**: Erfordert neue App-Registrierung
+
+## ⚠️ Häufige Fehler bei Scopes
+
+| Fehler | Ursache | Lösung |
+|--------|---------|--------|
+| **403 Forbidden** | Scope fehlt | Benötigten Scope bei Registrierung hinzufügen |
+| **403 Forbidden** | Falsche Schreibweise | Kleinschreibung verwenden: `customer.createcustomer` |
+| **Registrierung schlägt fehl** | Zu viele Scopes | Mit `["all.read"]` starten, schrittweise erweitern |
+| **GET funktioniert, POST nicht** | Nur `all.read` registriert | Spezifischen Schreib-Scope hinzufügen |
+| **Scope nicht erkannt** | Scope existiert nicht | In Swagger "AUTHORIZATIONS" prüfen |
+
+## MandatoryApiScopes vs. OptionalApiScopes
+
+| Typ | Wann verwenden? | Verhalten |
+|-----|-----------------|-----------|
+| **MandatoryApiScopes** | Für Kernfunktionen | App startet nur mit diesen Scopes |
+| **OptionalApiScopes** | Für optionale Features | Benutzer kann in JTL-Wawi ablehnen |
+
+**Beispiel**:
+```json
+{
+  "MandatoryApiScopes": ["all.read", "customer.createcustomer"],
+  "OptionalApiScopes": ["customer.deletecustomer"]
+}
+```
+
+→ Benutzer **muss** Lesen und Kunden-Anlegen erlauben
+→ Benutzer **kann** Kunden-Löschen verweigern
+
+## Spezielle Scopes
+
+### Application.RunAs
+
+Für Aktionen im Namen eines anderen Benutzers:
+```json
+{
+  "MandatoryApiScopes": ["all.read", "Application.RunAs"]
+}
+```
+
+Header bei Anfrage:
+```
+X-RunAs: BenutzerName
+```
+
+## Vollständige Scope-Liste abrufen
+
+### Option 1: Swagger UI
+1. REST-Server starten
+2. Browser: `http://localhost:5883/swagger`
+3. Bei jedem Endpoint "AUTHORIZATIONS" aufklappen
+
+### Option 2: swagger.json parsen
+```python
+import requests
+import json
+
+# Swagger JSON abrufen
+resp = requests.get("http://localhost:5883/swagger/v1/swagger.json")
+data = resp.json()
+
+# Scopes extrahieren
+scopes = data.get("components", {}).get("securitySchemes", {}).get("oauth2", {}).get("flows", {}).get("clientCredentials", {}).get("scopes", {})
+
+for scope, description in scopes.items():
+    print(f"{scope}: {description}")
+```
+
+### Option 3: Postman Import
+1. Swagger JSON herunterladen
+2. In Postman importieren
+3. Collection zeigt alle Endpoints mit Scopes
