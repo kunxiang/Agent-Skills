@@ -1,11 +1,75 @@
 # JTL-Wawi API Endpoints
 
+## ⚠️ KRITISCH: URL-Format (häufigster Fehler!)
+
+### Vollständige URL-Struktur für OnPrem
+
+```
+http://<HOST>:<PORT>/api/<MANDANT>/v1/<ENDPOINT>
+```
+
+**Beispiel**:
+```
+http://192.168.1.24:5883/api/eazybusiness/v1/customers
+                   │        │           │   │
+                   │        │           │   └── Endpoint
+                   │        │           └────── API-Version (v1)
+                   │        └────────────────── Mandantenname (Datenbank)
+                   └─────────────────────────── Port (Standard: 5883)
+```
+
+### ❌ FALSCHE URL-Formate (häufige Fehler)
+
+```bash
+# FALSCH: Fehlendes /api/
+http://localhost:5883/eazybusiness/v1/customers ❌
+
+# FALSCH: Fehlendes /v1/
+http://localhost:5883/api/eazybusiness/customers ❌
+
+# FALSCH: Falscher Mandantenname
+http://localhost:5883/api/eazyBusiness/v1/customers ❌  # Groß-/Kleinschreibung!
+
+# FALSCH: Altes /rest/ Format (veraltet)
+http://localhost:5883/rest/eazybusiness/v1/Customer ❌
+
+# FALSCH: Fehlender Mandant
+http://localhost:5883/api/v1/customers ❌
+```
+
+### ✓ RICHTIGE URL-Formate
+
+```bash
+# Korrekt: Standard OnPrem
+http://localhost:5883/api/eazybusiness/v1/customers ✓
+
+# Korrekt: Mit IP-Adresse
+http://192.168.1.24:5883/api/eazybusiness/v1/customers ✓
+
+# Korrekt: Anderer Mandantenname
+http://localhost:5883/api/MeinMandant/v1/customers ✓
+```
+
+### Mandantenname herausfinden
+
+Der Mandantenname entspricht dem **Datenbanknamen** in SQL Server:
+
+```bash
+# Beim Starten des REST-Servers wird der Mandant angezeigt:
+JTL.Wawi.Rest.exe -w "Standard" -d MeinMandant --port 5883
+
+# Ausgabe zeigt:
+# Starting REST API for tenant 'MeinMandant' on 'http://0.0.0.0:5883/api/MeinMandant'...
+```
+
+**Standard-Mandantenname**: `eazybusiness` (bei Standardinstallation)
+
 ## Base URLs
 
 | Umgebung | URL | Bemerkung |
 |----------|-----|-----------|
-| OnPrem (lokal) | `http://localhost:5883` | Standard-Port |
-| OnPrem (Netzwerk) | `http://<IP>:5883` | Firewall beachten |
+| OnPrem (lokal) | `http://localhost:5883/api/eazybusiness` | Standard-Port, Standard-Mandant |
+| OnPrem (Netzwerk) | `http://<IP>:5883/api/<MANDANT>` | Firewall beachten |
 | Cloud | `https://api.jtl-software.com/erp/v1.1` | OAuth erforderlich |
 
 ## App-Registrierung Endpoints
@@ -264,3 +328,138 @@ Interaktive API-Dokumentation:
 
 - **OnPrem**: `http://localhost:5883/swagger`
 - **Online**: https://developer.jtl-software.com/products/erpapi/openapi
+
+## ⚠️ Häufige Endpoint-Fehler und Lösungen
+
+### 1. URL-Pfad-Fehler
+
+| Fehler | Problem | Richtig |
+|--------|---------|---------|
+| `404 Not Found` | `/customers` statt `/v1/customers` | `/api/eazybusiness/v1/customers` |
+| `404 Not Found` | `/rest/...` statt `/api/...` | `/api/...` (aktuelles Format) |
+| `404 Not Found` | Mandant fehlt | `/api/eazybusiness/...` nicht `/api/...` |
+| `404 Not Found` | Falsche Groß-/Kleinschreibung | Mandantenname exakt wie in DB |
+
+### 2. HTTP-Methoden-Fehler
+
+| Fehler | Problem | Richtig |
+|--------|---------|---------|
+| `405 Method Not Allowed` | GET für Suche verwendet | POST `/customer/query` für Suche |
+| `405 Method Not Allowed` | POST für Abruf verwendet | GET `/customer/{id}` für Einzelabruf |
+
+**Wichtig: PUT vs POST bei JTL-Wawi API**
+
+- **PUT**: Zum **Validieren/Berechnen** von Werten (gibt berechnete Werte zurück)
+- **POST**: Zum **tatsächlichen Speichern** von Daten
+
+### 3. Endpoint-Namenskonventionen
+
+| Falsch ❌ | Richtig ✓ | Hinweis |
+|-----------|-----------|---------|
+| `/customers` | `/customer` | Singular für Einzeloperationen |
+| `/customer/search` | `/customer/query` | "query" nicht "search" |
+| `/articles` | `/article` | Singular |
+| `/orders` | `/salesorder` | "salesorder" nicht "order" |
+| `/invoices` | `/invoice` | Singular |
+
+### 4. Vollständige Endpoint-Übersicht
+
+```
+/api/{mandant}/v1/
+├── authentication                  # App-Registrierung (kein Auth)
+│   ├── POST /authentication        # Registrierung starten
+│   └── GET /authentication/{id}    # Status/API-Key abrufen
+│
+├── customer                        # Kunden
+│   ├── GET /{id}                   # Kunde abrufen
+│   ├── POST /                      # Kunde anlegen
+│   ├── PUT /{id}                   # Kunde aktualisieren
+│   ├── DELETE /{id}                # Kunde löschen
+│   └── POST /query                 # Kunden suchen
+│
+├── salesorder                      # Aufträge
+│   ├── GET /{id}                   # Auftrag abrufen
+│   ├── POST /                      # Auftrag anlegen
+│   └── POST /query                 # Aufträge suchen
+│
+├── article                         # Artikel
+│   ├── GET /{id}                   # Artikel abrufen
+│   └── POST /query                 # Artikel suchen
+│
+├── stock                           # Lagerbestand
+│   ├── POST /query                 # Bestand abfragen
+│   └── POST /adjustment            # Bestand anpassen
+│
+├── invoice                         # Rechnungen
+│   ├── GET /{id}                   # Rechnung abrufen
+│   └── POST /query                 # Rechnungen suchen
+│
+├── deliverynote                    # Lieferscheine
+│   ├── GET /{id}                   # Lieferschein abrufen
+│   └── POST /query                 # Lieferscheine suchen
+│
+├── category                        # Kategorien
+│   ├── GET /{id}                   # Kategorie abrufen
+│   ├── POST /                      # Kategorie anlegen
+│   └── POST /query                 # Kategorien suchen
+│
+├── company                         # Firmen
+│   └── POST /query                 # Firmen abfragen
+│
+├── offer                           # Angebote
+│   ├── GET /{id}                   # Angebot abrufen
+│   ├── POST /                      # Angebot anlegen
+│   └── POST /query                 # Angebote suchen
+│
+├── creditnote                      # Gutschriften
+│   ├── GET /{id}                   # Gutschrift abrufen
+│   └── POST /query                 # Gutschriften suchen
+│
+├── return                          # Retouren
+│   ├── GET /{id}                   # Retoure abrufen
+│   ├── POST /                      # Retoure anlegen
+│   └── POST /query                 # Retouren suchen
+│
+├── warehouse                       # Lager
+│   └── POST /query                 # Lager abfragen
+│
+├── workers                         # Synchronisation
+│   ├── GET /status                 # Worker-Status
+│   └── POST /configuresync         # Sync konfigurieren
+│
+└── info                            # System-Info
+    └── GET /status                 # API-Status
+```
+
+### 5. cURL-Beispiele für Fehlerbehebung
+
+**Prüfen ob Server erreichbar ist**:
+```bash
+curl -v http://localhost:5883/api/eazybusiness/v1/info/status \
+  -H "Authorization: Wawi {API-KEY}" \
+  -H "api-version: 1.0"
+```
+
+**Kunden suchen (POST, nicht GET!)**:
+```bash
+curl -X POST http://localhost:5883/api/eazybusiness/v1/customer/query \
+  -H "Authorization: Wawi {API-KEY}" \
+  -H "api-version: 1.0" \
+  -H "Content-Type: application/json" \
+  -d '{"SearchKeyWord": "Mustermann", "PageSize": 10}'
+```
+
+**Einzelnen Kunden abrufen (GET)**:
+```bash
+curl http://localhost:5883/api/eazybusiness/v1/customer/12345 \
+  -H "Authorization: Wawi {API-KEY}" \
+  -H "api-version: 1.0"
+```
+
+### 6. Debugging-Tipps
+
+1. **Swagger UI nutzen**: `http://localhost:5883/swagger` zeigt alle verfügbaren Endpoints
+2. **Postman verwenden**: API-Spezifikationen können importiert werden
+3. **Server-Logs prüfen**: JTL.Wawi.Rest.exe Konsole zeigt Fehlerdetails
+4. **api-version Header**: Immer angeben (`1.0` für OnPrem)
+5. **Content-Type**: Bei POST/PUT immer `application/json` setzen
