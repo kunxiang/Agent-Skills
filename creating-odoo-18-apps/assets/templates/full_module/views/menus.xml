@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Root Menu -->
+    <menuitem id="my_module_menu_root"
+              name="My Module"
+              sequence="10"
+              web_icon="full_module,static/description/icon.png"/>
+
+    <!-- Main Menu -->
+    <menuitem id="my_model_menu"
+              name="My Records"
+              parent="my_module_menu_root"
+              action="my_model_action"
+              sequence="10"/>
+
+    <!-- Configuration Menu -->
+    <menuitem id="my_module_menu_config"
+              name="Configuration"
+              parent="my_module_menu_root"
+              groups="group_my_module_manager"
+              sequence="100"/>
+
+    <menuitem id="my_model_tag_menu"
+              name="Tags"
+              parent="my_module_menu_config"
+              action="my_model_tag_action"
+              sequence="10"/>
+
+    <!-- Tag Action -->
+    <record id="my_model_tag_action" model="ir.actions.act_window">
+        <field name="name">Tags</field>
+        <field name="res_model">my.model.tag</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <!-- Tag Tree View -->
+    <record id="my_model_tag_view_tree" model="ir.ui.view">
+        <field name="name">my.model.tag.tree</field>
+        <field name="model">my.model.tag</field>
+        <field name="arch" type="xml">
+            <tree editable="bottom">
+                <field name="name"/>
+                <field name="color" widget="color_picker"/>
+            </tree>
+        </field>
+    </record>
+</odoo>
