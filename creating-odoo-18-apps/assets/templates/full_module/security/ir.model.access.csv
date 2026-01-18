@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_my_model_user,my.model.user,model_my_model,group_my_module_user,1,1,1,0
+access_my_model_manager,my.model.manager,model_my_model,group_my_module_manager,1,1,1,1
+access_my_model_line_user,my.model.line.user,model_my_model_line,group_my_module_user,1,1,1,0
+access_my_model_line_manager,my.model.line.manager,model_my_model_line,group_my_module_manager,1,1,1,1
+access_my_model_tag_user,my.model.tag.user,model_my_model_tag,group_my_module_user,1,0,0,0
+access_my_model_tag_manager,my.model.tag.manager,model_my_model_tag,group_my_module_manager,1,1,1,1

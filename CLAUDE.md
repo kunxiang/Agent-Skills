@@ -41,19 +41,30 @@ Agent-Skills/
 │       ├── info.xml
 │       └── Bootstrap.php
 │
-└── creating-jtl-shop-nova-template/    # JTL-Shop NOVA template development (German)
+├── creating-jtl-shop-nova-template/    # JTL-Shop NOVA template development (German)
+│   ├── SKILL.md
+│   ├── references/
+│   │   ├── scss-variables.md
+│   │   ├── smarty-blocks.md
+│   │   ├── parametric-catalog.md
+│   │   ├── parametric-catalog-js.md
+│   │   └── parametric-catalog-styles.md
+│   └── assets/
+│       ├── Bootstrap.php
+│       ├── js/parametric-catalog.js
+│       ├── templates/productlist/
+│       └── themes/_parametric-catalog.scss
+│
+└── creating-odoo-18-apps/              # Odoo 18 module/addon development
     ├── SKILL.md
     ├── references/
-    │   ├── scss-variables.md
-    │   ├── smarty-blocks.md
-    │   ├── parametric-catalog.md
-    │   ├── parametric-catalog-js.md
-    │   └── parametric-catalog-styles.md
-    └── assets/
-        ├── Bootstrap.php
-        ├── js/parametric-catalog.js
-        ├── templates/productlist/
-        └── themes/_parametric-catalog.scss
+    │   ├── manifest.md                 # __manifest__.py reference
+    │   ├── models.md                   # ORM and fields reference
+    │   ├── views.md                    # XML views reference
+    │   └── security.md                 # Access control reference
+    └── assets/templates/
+        ├── basic_module/               # Minimal module template
+        └── full_module/                # Complete module template
 ```
 
 ## Available Skills
@@ -63,6 +74,7 @@ Agent-Skills/
 | `creating-agent-skills` ⭐ | `/creating-agent-skills` | **Meta-skill**: Creates other Claude Agent Skills |
 | `creating-jtl-shop-5-plugins` | `/creating-jtl-shop-5-plugins` | JTL-Shop 5 plugin development |
 | `creating-jtl-shop-nova-template` | `/creating-jtl-shop-nova-template` | JTL-Shop 5 NOVA child template development |
+| `creating-odoo-18-apps` | `/creating-odoo-18-apps` | Odoo 18 module/addon development |
 
 > ⭐ **Meta-skill**: `creating-agent-skills` is a special "skill that creates skills". It defines how to create specification-compliant new skills and serves as the foundation for all skill development in this repository.
 
